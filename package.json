@@ -1,18 +1,14 @@
 {
   "name": "tiktokdl-api",
   "version": "2.3.2",
-  "description": "Website Tiktok Downloader API.",
-  "main": "index.coffee",
+  "description": "Website TikTok Downloader API.",
+  "main": "server.js",
   "scripts": {
-    "dev": "nodemon --exec coffee index.coffee",
-    "start": "node index.js",
-    "start:coffee": "coffee index.coffee",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "Tio",
-  "license": "MIT",
   "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7",
     "btch-downloader": "^2.3.2",
     "koa": "^2.11.0",
     "koa-router": "^7.4.0",
