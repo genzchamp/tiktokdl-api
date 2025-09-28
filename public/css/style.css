@@ -1,156 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;700&display=swap');
-
-:root{
-    --color-text: #525252;
-    --color-primary: #7241FF;
-    --color-primary-light: #7241FF70;
-    --color-danger: #ff4141;
-    --color-bg: #F5F1FF;
-    --white: #ffffff;
+/* style.css */
+:root {
+  --accent: #ff0050;
+  --max-width: 840px;
 }
-
-*{
-    box-sizing: border-box;
-}
-
+*{box-sizing:border-box}
 body{
-    margin: 0;
-    background-color: var(--color-bg);
-    font-family: 'Poppins', sans-serif;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background:#f6f7fb;
+  margin:0;
+  color:#222;
+  -webkit-font-smoothing:antialiased;
 }
-
-.container{
-    max-width: 80%;
-    min-height: 90vh;
-    width: 100%;
-    margin: 0 auto;
-    display: grid;
-    place-content: center;
-}
-
-.card{
-    margin-top: 2rem;
-    background-color: var(--white);
-    padding: 1rem;
-    border-radius: 10px;
-}
-
-.card h2{
-    color: var(--color-text);
-    font-weight: 500;
-}
-.card h2 b{
-    color: var(--color-primary);
-}
-
-form{
-    display: flex;
-    justify-content: space-between;
-}
-
-form input{
-    margin-right: 5px;
-}
-
-form input:nth-child(1){
-    width: 80%;
-    padding: .7rem;
-    border-radius: 10px;
-    border: 2px solid var(--color-primary-light);
-    background-color: var(--color-bg);
-    color: var(--color-text);
-    outline: none;
-    font-weight: 500;
-    transition: .3s ease-in-out;
-}
-
-form input:nth-child(1):focus, form input:nth-child(1):hover{
-    border: 2px solid var(--color-primary);
-}
-
-.btn-submit{
-    background-color: var(--color-primary);
-    border: none;
-    border-radius: 10px;
-    font-weight: 500;
-    color: var(--white);
-    cursor: pointer;
-}
-
-.btn{
-    margin-bottom: 1rem;
-    padding: 0.4rem;
-    background-color: var(--color-primary);
-    color: var(--white);
-    border-radius: 10px;
-    text-decoration: none;
-    text-align: center;
-}
-
-.btn-submit:disabled{
-    background-color: var(--color-primary-light);
-}
-
-.content{
-    min-width: 300px;
-    border-radius: 10px;
-    margin-top: 1rem;
-    min-height: 300px;
-    background-color: var(--color-bg);
-    display: grid;
-    place-content: center;
-    padding: 1rem;
-}
-
-.content video{
-    justify-self: center;
-    width: 300px;
-    border-radius: 10px;
-}
-
-@media screen and (min-width: 720px) {
-    .content{
-        width: 400px;
-    }
-    .content ol{
-        font-size: 12px;
-    }
-
-    .content video{
-        width: 200px;
-    }
-}
-
-footer{
-    margin-top: 1rem;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-footer h3{
-    color: var(--color-text);
-    font-weight: 300;
-    font-size: 14px;
-    margin: 0;
-}
-footer b{
-    font-weight: 500;
-    color: var(--color-primary);
-}
-
-footer p{
-    margin: 0;
-    font-size: 12px;
-    text-align: center;
-    color: var(--color-text);
-}
-
-.btn-script{
-    text-decoration: none;
-}
-
-.messageError{
-    color: var(--color-danger);
-}
+.site-header{background:#fff;padding:28px 16px 8px;text-align:center;border-bottom:1px solid #eee}
+.site-header h1{margin:0;font-size:1.5rem}
+.tagline{color:#666;margin-top:6px;font-size:0.95rem}
+.container{max-width:var(--max-width);margin:28px auto;padding:16px}
+.download-form{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px}
+.download-form input{flex:1;padding:12px 14px;border-radius:8px;border:1px solid #ddd;font-size:15px;min-width:180px}
+.download-form button{background:var(--accent);color:#fff;border:none;padding:11px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+.download-form button:disabled{opacity:.6;cursor:default}
+.result{margin-top:12px;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee;min-height:48px}
+.note{margin-top:12px;color:#555;font-size:0.95rem}
+.disclaimer{color:#a33;font-size:0.9rem}
+.ad-slot{margin:18px auto;padding:14px;border-radius:8px;background:#fff;border:1px dashed #ddd;text-align:center;color:#888}
+.donation{margin-top:16px;text-align:center}
+.donation img{height:44px}
+.site-footer{text-align:center;padding:18px;color:#888;font-size:0.85rem;border-top:1px solid #eee;margin-top:28px}
