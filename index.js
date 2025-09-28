@@ -2,7 +2,7 @@
 (function() {
   var Koa, Router, app, bodyParser, logger, port, ratelimit, responseTime, router, scraper, serve;
 
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+ // process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
   Koa = require('koa');
 
