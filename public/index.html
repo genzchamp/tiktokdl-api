@@ -1,58 +1,167 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="description" content="Download TikTok videos without watermark — fast, easy, and 100% free.">
-    <meta name="keywords" content="tiktok downloader, no watermark, download tiktok video, tiktok video saver, free downloader, oba tools">
-    <meta name="author" content="Oba">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>TikTokDL by Oba — Download TikTok Videos Without Watermark</title>
-
-    <!-- ✅ Google Verification -->
-    <meta name="google-site-verification" content="P0e4HRfalsCcvLudOXKuQjKVe5SgROwR7CG6z1Lpu3s" />
-
-    <!-- ✅ SEO and Open Graph -->
-    <meta name="robots" content="index, follow">
-    <meta property="og:title" content="TikTokDL by Oba — Download TikTok Videos Without Watermark">
-    <meta property="og:description" content="Download TikTok videos instantly with no watermark. 100% free, powered by Oba.">
-    <meta property="og:url" content="https://tiktokdl-api-1.onrender.com/">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://tiktokdl-api-1.onrender.com/img/icon.png">
-
-    <link rel="icon" type="image/png" href="img/icon.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+  <meta charset="utf-8" />
+  <meta name="google-site-verification" content="P0e4HRfalsCcvLudOXKuQjKVe5SgROwR7CG6z1Lpu3s" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TikTokDL — Oba • Download TikTok Videos (No Watermark)</title>
+  <meta name="description" content="TikTokDL by Oba — Fast, free TikTok downloader. Paste a TikTok link and download the video without watermark." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="img/icon.png" />
 </head>
 <body>
-    
-    <main id="app" class="container">
-        <div class="card">
-            <h2>Insert a valid link of <b>TikTok</b></h2>
-            <form id="form">
-                <input type="url" name="url" id="url" placeholder="Paste the TikTok video link...">
-                <input type="submit" id="submit" class="btn-submit" value="GENERATE">
-            </form>
-            <div id="content" class="content">
-                <ol>
-                    <li>Copy the TikTok video link</li>
-                    <li>Paste it in the box above</li>
-                    <li>Click <b>GENERATE</b></li>
-                    <li>Watch or download your video — no watermark</li>
-                </ol>
-            </div>
+  <header class="topbar">
+    <div class="brand">
+      <img src="img/icon.png" alt="logo" class="logo"/>
+      <div>
+        <div class="title">TikTokDL <span class="by">by Oba</span></div>
+        <div class="subtitle">Download TikTok videos — quick & clean</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#" class="nav-link">Home</a>
+      <a href="#how" class="nav-link">How</a>
+      <a href="#support" class="nav-link">Support</a>
+    </nav>
+  </header>
+
+  <main class="hero">
+    <div class="hero-left">
+      <h1 class="hero-h">Save TikTok videos — <span class="accent">no watermark</span></h1>
+      <p class="hero-p">Paste a TikTok link below and get a clean MP4 instantly. Works with short links (vm.tiktok.com) — mobile friendly.</p>
+
+      <form id="downloadForm" class="download-form" autocomplete="off">
+        <input id="urlInput" type="text" placeholder="Paste TikTok link (vm.tiktok.com or www.tiktok.com/…)" />
+        <button type="submit" id="downloadBtn">GENERATE</button>
+      </form>
+
+      <div id="result" class="result">
+        <div class="empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p>Paste a link and press <strong>GENERATE</strong>.</p>
         </div>
-    </main>
+      </div>
 
-    <footer>
-        <a class="btn-script" href="https://paystack.shop/pay/support-oba" target="_blank">
-            <h3>Created by <b>Oba</b></h3>
-            <p>Support development ❤️</p>
-        </a>
-        <p style="font-size: 12px; margin-top: 10px;">© 2025 TikTokDL by Oba. All rights reserved.</p>
-    </footer>
+      <div class="meta-row">
+        <div class="ad-slot">AD SLOT — replace with Ad code</div>
+        <div id="support" class="donation">
+          <a class="pay-btn" href="https://paystack.shop/pay/support-oba" target="_blank" rel="noopener">
+            💚 Support Oba
+          </a>
+          <div class="small">Thanks — every bit helps keep the site alive.</div>
+        </div>
+      </div>
+    </div>
 
-    <script src="js/app.mjs" type="module"></script>
+    <aside class="hero-right">
+      <div class="card glass">
+        <h3>Why TikTokDL?</h3>
+        <ul>
+          <li>Fast downloads — demo & small scale</li>
+          <li>Expands short links automatically</li>
+          <li>No client apps or login required</li>
+        </ul>
+      </div>
+
+      <div class="card preview">
+        <div id="thumbArea" class="thumbArea">Preview will appear here</div>
+        <div id="linkArea" class="linkArea"></div>
+      </div>
+    </aside>
+  </main>
+
+  <section id="how" class="how">
+    <h2>How it works</h2>
+    <ol>
+      <li>Copy the TikTok video link (or share link)</li>
+      <li>Paste it into the box above</li>
+      <li>Click <strong>GENERATE</strong> — wait a moment</li>
+      <li>Click the download link to save the MP4</li>
+    </ol>
+  </section>
+
+  <footer class="footer">
+    <div class="left">
+      <strong>© 2025 TikTokDL — Oba</strong>
+      <div class="tiny">Respect creators. Use responsibly.</div>
+    </div>
+    <div class="right">
+      <a class="tiny" href="/privacy.html">Privacy</a>
+      <a class="tiny" href="/terms.html">Terms</a>
+    </div>
+  </footer>
+
+  <!-- Inline JS (simple, self-contained) -->
+  <script>
+  // Minimal frontend script to call your backend /api/download and show result
+  (function(){
+    const form = document.getElementById('downloadForm');
+    const urlInput = document.getElementById('urlInput');
+    const result = document.getElementById('result');
+    const thumbArea = document.getElementById('thumbArea');
+    const linkArea = document.getElementById('linkArea');
+    const btn = document.getElementById('downloadBtn');
+
+    function showMessage(text, err=false){
+      result.innerHTML = '<div class="msg '+(err?'err':'ok')+'">'+text+'</div>';
+    }
+
+    function showEmpty(){
+      result.innerHTML = '<div class="empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><p>Paste a link and press <strong>GENERATE</strong>.</p></div>';
+      thumbArea.textContent = 'Preview will appear here';
+      linkArea.innerHTML = '';
+    }
+
+    async function callApi(tiktokUrl){
+      try {
+        const resp = await fetch('/api/download', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ tiktokUrl })
+        });
+
+        const text = await resp.text();
+        let data;
+        try { data = JSON.parse(text); } catch(e){ data = { error: 'Invalid response from server', raw: text }; }
+
+        if(!resp.ok) {
+          showMessage(data.error || data.message || 'Server error', true);
+          console.error('Server error:', data);
+          return;
+        }
+
+        const dl = data.downloadUrl || data.url || data.video || data.link;
+        const thumb = data.thumbnail || null;
+
+        if(dl){
+          thumbArea.innerHTML = thumb ? '<img src="'+thumb+'" alt="thumb" />' : '<div class="no-thumb">Video ready</div>';
+          linkArea.innerHTML = '<a class="download-link" href="'+dl+'" target="_blank" rel="noopener">⬇ Download Video</a>';
+          showMessage('Ready — click the download link below.');
+        } else {
+          showMessage('No download URL returned. See console.', true);
+          console.log('Full response:', data);
+        }
+      } catch(err){
+        showMessage('Network or server error. Try again.', true);
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'GENERATE';
+      }
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      const val = urlInput.value.trim();
+      if(!val){ showEmpty(); return; }
+      btn.disabled = true; btn.textContent = 'Processing…';
+      showMessage('Contacting server…');
+      callApi(val);
+    });
+
+    // init
+    showEmpty();
+  })();
+  </script>
 </body>
 </html>
