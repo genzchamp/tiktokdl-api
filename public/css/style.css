@@ -1,28 +1,106 @@
-/* style.css */
-:root {
-  --accent: #ff0050;
-  --max-width: 840px;
+/* style.css — Gen Z friendly, minimal dependencies */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+:root{
+  --bg:#0f1724;
+  --card:#0b1220cc;
+  --muted:#98a0b3;
+  --accent1:#ff3cac;
+  --accent2:#6be3ff;
+  --glass: rgba(255,255,255,0.04);
+  --glass-2: rgba(255,255,255,0.03);
 }
 *{box-sizing:border-box}
 body{
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-  background:#f6f7fb;
   margin:0;
-  color:#222;
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, #071429 0%, #071025 45%, #05060d 100%);
+  color:#e6eef8;
   -webkit-font-smoothing:antialiased;
+  min-height:100vh;
 }
-.site-header{background:#fff;padding:28px 16px 8px;text-align:center;border-bottom:1px solid #eee}
-.site-header h1{margin:0;font-size:1.5rem}
-.tagline{color:#666;margin-top:6px;font-size:0.95rem}
-.container{max-width:var(--max-width);margin:28px auto;padding:16px}
-.download-form{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px}
-.download-form input{flex:1;padding:12px 14px;border-radius:8px;border:1px solid #ddd;font-size:15px;min-width:180px}
-.download-form button{background:var(--accent);color:#fff;border:none;padding:11px 16px;border-radius:8px;cursor:pointer;font-weight:600}
-.download-form button:disabled{opacity:.6;cursor:default}
-.result{margin-top:12px;background:#fff;padding:12px;border-radius:8px;border:1px solid #eee;min-height:48px}
-.note{margin-top:12px;color:#555;font-size:0.95rem}
-.disclaimer{color:#a33;font-size:0.9rem}
-.ad-slot{margin:18px auto;padding:14px;border-radius:8px;background:#fff;border:1px dashed #ddd;text-align:center;color:#888}
-.donation{margin-top:16px;text-align:center}
-.donation img{height:44px}
-.site-footer{text-align:center;padding:18px;color:#888;font-size:0.85rem;border-top:1px solid #eee;margin-top:28px}
+
+/* Topbar */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  padding:18px 20px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:48px;height:48px;border-radius:10px;object-fit:cover}
+.title{font-weight:700;font-size:1.05rem}
+.by{font-weight:500;color:var(--accent2);margin-left:6px;font-size:0.95rem}
+.subtitle{font-size:0.80rem;color:var(--muted);margin-top:2px}
+
+/* Hero layout */
+.hero{
+  display:flex;
+  gap:28px;
+  max-width:1100px;
+  margin:28px auto;
+  padding:0 20px;
+}
+.hero-left{flex:1;min-width:0}
+.hero-right{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+
+/* Heading */
+.hero-h{font-size:2.1rem;margin:6px 0 8px;line-height:1.02}
+.accent{background:linear-gradient(90deg,var(--accent1),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-p{color:var(--muted);margin-bottom:14px;max-width:640px}
+
+/* Form */
+.download-form{display:flex;gap:10px;align-items:center}
+.download-form input{
+  flex:1;padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color:#eaf3ff;font-size:15px;outline:none;
+}
+.download-form input::placeholder{color:rgba(255,255,255,0.35)}
+.download-form button{
+  background: linear-gradient(90deg,var(--accent1),var(--accent2));
+  border:none;color:#06111a;padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer;
+  box-shadow: 0 6px 18px rgba(107, 227, 255, 0.12);
+}
+
+/* Result area */
+.result{margin-top:16px;background:var(--glass);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);min-height:90px;display:flex;align-items:center;justify-content:center}
+.empty{display:flex;flex-direction:column;gap:8px;align-items:center;color:var(--muted)}
+.msg.ok{color:#bdf6d8}
+.msg.err{color:#ffb4c7}
+
+/* preview / sidebar cards */
+.card{background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:14px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
+.card h3{margin:0 0 8px;font-size:1rem}
+.card ul{margin:0;padding-left:18px;color:var(--muted);font-size:0.95rem}
+.preview .thumbArea{height:170px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.03));display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.preview img{max-width:100%;height:auto;border-radius:8px}
+.linkArea{margin-top:8px}
+
+/* meta row */
+.meta-row{display:flex;gap:12px;margin-top:14px;align-items:center}
+.ad-slot{flex:1;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));padding:12px;border-radius:10px;text-align:center;color:var(--muted);border:1px dashed rgba(255,255,255,0.03)}
+.donation{min-width:160px;text-align:center}
+.pay-btn{display:inline-block;background:#0a3;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}
+
+/* How section */
+.how{max-width:1100px;margin:28px auto;padding:0 20px;color:var(--muted)}
+.how h2{color:#f3f9ff}
+.how ol{background:var(--glass-2);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+
+/* Footer */
+.footer{max-width:1100px;margin:26px auto;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:0.9rem}
+.tiny{color:var(--muted);font-size:0.86rem}
+
+/* Download link styling */
+.download-link{display:inline-block;background:linear-gradient(90deg,var(--accent2),var(--accent1));color:#04121a;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}
+
+/* responsive */
+@media (max-width:880px){
+  .hero{flex-direction:column;padding:16px}
+  .hero-right{width:100%}
+  .brand .title{font-size:0.98rem}
+  .hero-h{font-size:1.6rem}
+}
