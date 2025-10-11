@@ -106,6 +106,7 @@ router.get('/download', async (ctx) => {
  * Expects JSON body: { tiktokUrl: "https://vm.tiktok.com/..." }
  * Returns JSON: { ok:true, downloadUrl: "...", thumbnail: "...", raw: {...} }
  */
+// Improved POST /api/download with aggressive normalization + debug info
 router.post('/api/download', async (ctx) => {
   const body = ctx.request.body || {};
   const tiktokUrl = body.tiktokUrl || body.url || ctx.request.query.url;
@@ -115,32 +116,128 @@ router.post('/api/download', async (ctx) => {
     return;
   }
 
-  try {
-    const result = await scraper.ttdl(tiktokUrl);
+  // helper: try to extract a URL from many possible shapes
+  function findDownloadUrl(obj) {
+    if (!obj) return null;
+    // if it's already a string and looks like an http url, return it
+    if (typeof obj === 'string' && /^https?:\/\//i.test(obj)) return obj;
 
-    const video = result && result.video ? result.video : result;
+    // common candidate keys
+    const keys = [
+      'downloadUrl','download','url','playAddr','play_url','videoUrl','video','video_url',
+      'noWatermark','no_watermark','no_watermark_url','no_watermark_url',
+      'watermarkless','no_wm','wmfree'
+    ];
+
+    for (const k of keys) {
+      if (obj[k]) {
+        if (typeof obj[k] === 'string' && /^https?:\/\//i.test(obj[k])) return obj[k];
+        // sometimes nested objects
+        if (typeof obj[k] === 'object') {
+          // check common nested fields
+          const nested = obj[k].url || obj[k].src || obj[k].playAddr || obj[k].download || obj[k][0];
+          if (nested && typeof nested === 'string' && /^https?:\/\//i.test(nested)) return nested;
+        }
+      }
+    }
+
+    // arrays like urls: [ { url: '...' }, '...' ]
+    if (Array.isArray(obj.urls) && obj.urls.length) {
+      for (const u of obj.urls) {
+        if (typeof u === 'string' && /^https?:\/\//i.test(u)) return u;
+        if (u && typeof u === 'object') {
+          const cand = u.url || u.src || u.playAddr || u.download;
+          if (cand && typeof cand === 'string' && /^https?:\/\//i.test(cand)) return cand;
+        }
+      }
+    }
+
+    // check for nested video object
+    if (obj.video) {
+      const found = findDownloadUrl(obj.video);
+      if (found) return found;
+    }
+
+    // thumbnail sometimes contains video url? check common nested fields
+    if (obj.data) {
+      const fromData = findDownloadUrl(obj.data);
+      if (fromData) return fromData;
+    }
+
+    // deep scan: walk object (limited depth to avoid perf)
+    function deepScan(o, depth = 0) {
+      if (!o || depth > 3) return null;
+      if (typeof o === 'string' && /^https?:\/\//i.test(o)) return o;
+      if (Array.isArray(o)) {
+        for (const it of o) {
+          const r = deepScan(it, depth + 1);
+          if (r) return r;
+        }
+      } else if (typeof o === 'object') {
+        for (const k of Object.keys(o)) {
+          const r = deepScan(o[k], depth + 1);
+          if (r) return r;
+        }
+      }
+      return null;
+    }
+
+    return deepScan(obj, 0);
+  }
+
+  // small retry wrapper in case of transient failures
+  async function tryProvider(url, attempts = 2) {
+    let lastErr = null;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await scraper.ttdl(url);
+        return res;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`scraper.ttdl attempt ${i+1} failed:`, (err && (err.message || err)));
+        // slight delay between retries
+        await new Promise(r => setTimeout(r, 400 * (i+1)));
+      }
+    }
+    throw lastErr;
+  }
+
+  try {
+    const result = await tryProvider(tiktokUrl, 2);
+    // log the raw result for debug (will show up in Render logs)
+    console.log('provider raw result:', JSON.stringify(result && (typeof result === 'object' ? result : { result }), null, 2));
+
+    // attempt to find download url
     let downloadUrl = null;
     let thumbnail = null;
 
-    if (typeof video === 'string') {
-      downloadUrl = video;
-    } else if (video && typeof video === 'object') {
-      downloadUrl = video.noWatermark || video.no_watermark || video.url || video.playAddr || video.download || (video.urls && video.urls[0]) || null;
-      thumbnail = video.thumbnail || video.cover || result.thumbnail || null;
+    // if provider returns {audio, video} like the original route
+    if (result && result.video) {
+      downloadUrl = findDownloadUrl(result.video);
+      thumbnail = result.thumbnail || result.cover || (result.video && (result.video.thumbnail || result.video.cover));
+    } else {
+      // try direct
+      downloadUrl = findDownloadUrl(result);
+      thumbnail = result && (result.thumbnail || result.cover || null);
     }
 
     if (!downloadUrl) {
-      // return raw for debugging if no usable URL found
+      // give the caller as much info as possible for debugging
       ctx.status = 502;
-      ctx.body = { ok: false, error: 'No download URL found from provider', raw: result };
+      ctx.body = {
+        ok: false,
+        error: 'No download url found from provider',
+        hint: 'Check the "raw" field for provider response shape',
+        raw: result
+      };
       return;
     }
 
     ctx.body = { ok: true, downloadUrl, thumbnail, raw: result };
   } catch (err) {
-    console.error('POST /api/download error:', err && (err.stack || err));
+    console.error('POST /api/download provider failure:', err && (err.stack || err));
     ctx.status = 502;
-    ctx.body = { ok: false, error: 'Provider error', details: String(err) };
+    ctx.body = { ok: false, error: 'Provider call failed', details: String(err) };
   }
 });
 
