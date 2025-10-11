@@ -241,6 +241,65 @@ router.post('/api/download', async (ctx) => {
   }
 });
 
+
+/**
+ * GET /stream?url=<encoded_download_url>
+ * Proxies the remote video URL and streams it to the client with a Content-Disposition
+ * so the browser will download the file directly without opening another page.
+ */
+const { URL } = require('url');
+const nodeFetch = require('node-fetch'); // if already required as scraper uses btch-downloader, this is fine
+
+router.get('/stream', async (ctx) => {
+  const source = ctx.request.query.url || ctx.request.query.source;
+  if (!source) {
+    ctx.status = 400;
+    ctx.body = { ok: false, error: 'Missing url query parameter' };
+    return;
+  }
+
+  try {
+    // Basic validation: ensure this looks like an http(s) URL
+    const parsed = new URL(source);
+    if (!/^https?:$/.test(parsed.protocol)) {
+      ctx.status = 400;
+      ctx.body = { ok: false, error: 'Invalid URL protocol' };
+      return;
+    }
+
+    // Fetch the remote video. Use node-fetch to get the stream.
+    const upstream = await nodeFetch(source, { method: 'GET' });
+
+    if (!upstream.ok) {
+      const txt = await upstream.text().catch(() => '');
+      ctx.status = 502;
+      ctx.body = { ok: false, error: 'Upstream fetch failed', status: upstream.status, body: txt };
+      return;
+    }
+
+    // Try to determine filename from URL or Content-Disposition
+    let filename = 'tiktok_video.mp4';
+    try {
+      const pathParts = parsed.pathname.split('/');
+      const last = pathParts[pathParts.length - 1];
+      if (last && last.includes('.')) filename = last;
+    } catch (e) {}
+
+    // Set headers for download
+    ctx.set('Content-Type', upstream.headers.get('content-type') || 'application/octet-stream');
+    ctx.set('Content-Disposition', `attachment; filename="${filename}"`);
+    // Optional: set cache-control if you want browsers to cache
+    // ctx.set('Cache-Control', 'public, max-age=3600');
+
+    // Pipe upstream body (ReadableStream) into koa response
+    ctx.body = upstream.body; // node-fetch v2 returns a Node Readable stream — Koa will stream it
+  } catch (err) {
+    console.error('GET /stream error:', err && (err.stack || err));
+    ctx.status = 500;
+    ctx.body = { ok: false, error: 'Server error proxying video', details: String(err) };
+  }
+});
+
 app.use(router.routes());
 app.use(router.allowedMethods());
 
