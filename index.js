@@ -247,7 +247,7 @@ router.post('/api/download', async (ctx) => {
  * Proxies the remote video URL and streams it to the client with a Content-Disposition
  * so the browser will download the file directly without opening another page.
  */
-const { URL } = require('url');
+import { URL } from 'url';
 const nodeFetch = require('node-fetch'); // if already required as scraper uses btch-downloader, this is fine
 
 router.get('/stream', async (ctx) => {
