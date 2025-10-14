@@ -300,6 +300,86 @@ router.get('/stream', async (ctx) => {
   }
 });
 
+// ===== Stronger /stream route (Koa) =====
+const { URL } = require('url');
+const nodeFetch = require('node-fetch'); // ensure this is installed in package.json
+
+router.get('/stream', async (ctx) => {
+  const source = ctx.request.query.url || ctx.request.query.source;
+  if (!source) {
+    ctx.status = 400;
+    ctx.body = { ok: false, error: 'Missing url query parameter' };
+    return;
+  }
+
+  try {
+    // Basic validation
+    const parsed = new URL(source);
+    if (!/^https?:$/.test(parsed.protocol)) {
+      ctx.status = 400;
+      ctx.body = { ok: false, error: 'Invalid URL protocol' };
+      return;
+    }
+
+    // Fetch upstream, follow redirects
+    const upstream = await nodeFetch(source, {
+      method: 'GET',
+      redirect: 'follow',
+      headers: {
+        // Some providers block non-browser agents — use a browser UA
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
+        'Accept': '*/*'
+      },
+      // optional: increase timeout if needed (node-fetch v2 doesn't have timeout here)
+    });
+
+    if (!upstream.ok) {
+      const bodyText = await upstream.text().catch(() => '');
+      ctx.status = 502;
+      ctx.body = { ok: false, error: 'Upstream fetch failed', status: upstream.status, body: bodyText };
+      return;
+    }
+
+    // Derive filename (try content-disposition header or fallback)
+    let filename = 'tiktok_video.mp4';
+    try {
+      // try upstream Content-Disposition to extract filename
+      const cd = upstream.headers.get('content-disposition');
+      if (cd) {
+        const m = cd.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)/i);
+        if (m && m[1]) {
+          filename = decodeURIComponent(m[1]);
+        }
+      } else {
+        // fallback: use last path part if it contains extension
+        const parts = parsed.pathname.split('/');
+        const last = parts[parts.length - 1] || '';
+        if (last && last.includes('.')) filename = last;
+      }
+    } catch (e) {
+      // ignore and use fallback filename
+    }
+
+    // Set response headers to force download
+    const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
+    ctx.set('Content-Type', contentType);
+    ctx.set('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // If upstream provides length, forward it
+    const upstreamLength = upstream.headers.get('content-length');
+    if (upstreamLength) ctx.set('Content-Length', upstreamLength);
+
+    // Stream upstream body directly to client (node-fetch v2 -> Readable stream)
+    ctx.status = 200;
+    ctx.body = upstream.body;
+  } catch (err) {
+    console.error('GET /stream error:', err && (err.stack || err));
+    ctx.status = 500;
+    ctx.body = { ok: false, error: 'Server error proxying video', details: String(err) };
+  }
+});
+// ===== end /stream =====
+
 app.use(router.routes());
 app.use(router.allowedMethods());
 
