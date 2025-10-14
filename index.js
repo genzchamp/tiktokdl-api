@@ -1,6 +1,5 @@
-// index.js - Koa server for TikTok downloader (updated)
-// Keep the NODE_TLS_REJECT_UNAUTHORIZED line commented out for security.
-// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// index.js (CommonJS) - Koa server for TikTok downloader
+'use strict';
 
 const Koa = require('koa');
 const Router = require('koa-router');
@@ -9,19 +8,23 @@ const serve = require('koa-static');
 const logger = require('koa-logger');
 const responseTime = require('koa-response-time');
 const ratelimit = require('koa-ratelimit');
-const scraper = require('btch-downloader');
+const scraper = require('btch-downloader'); // existing provider used earlier
+const nodeFetch = require('node-fetch'); // requires node-fetch v2.x (CommonJS)
+const { URL } = require('url');
 
 const app = new Koa();
 const router = new Router();
-
 const port = process.env.PORT || 3000;
 
+// serve static files from public/
 app.use(serve('public'));
+
+// helpful middlewares
 app.use(logger());
 app.use(responseTime());
 app.use(bodyParser());
 
-// simple in-memory rate limit (suitable for small scale)
+// rate limit (in-memory) - fine for small-scale usage
 app.use(ratelimit({
   driver: 'memory',
   db: new Map(),
@@ -43,8 +46,9 @@ app.use(ratelimit({
 }));
 
 /**
- * Original compatibility route (keeps existing behavior)
- * Example: GET /tiktok/api.php?url=<tiktok_link>
+ * Compatibility route (original)
+ * GET /tiktok/api.php?url=<tiktok_link>
+ * Returns provider's audio/video structure (keeps backwards compatibility)
  */
 router.get('/tiktok/api.php', async (ctx) => {
   const urls = ctx.request.query.url;
@@ -56,8 +60,8 @@ router.get('/tiktok/api.php', async (ctx) => {
 
   try {
     const result = await scraper.ttdl(urls);
-    // original response shape: return audio, video
-    const { audio, video } = result || {};
+    const audio = result && result.audio ? result.audio : null;
+    const video = result && result.video ? result.video : null;
     ctx.body = { audio, video };
   } catch (error) {
     console.error('GET /tiktok/api.php error:', error && (error.stack || error));
@@ -67,9 +71,9 @@ router.get('/tiktok/api.php', async (ctx) => {
 });
 
 /**
+ * Helper GET route for testing:
  * GET /download?url=<tiktok_link>
- * Quick helper for testing with curl or direct GET requests.
- * Returns normalized JSON with downloadUrl and thumbnail fields.
+ * Returns normalized JSON with downloadUrl + thumbnail
  */
 router.get('/download', async (ctx) => {
   const urls = ctx.request.query.url || ctx.request.query.tiktokUrl;
@@ -81,8 +85,8 @@ router.get('/download', async (ctx) => {
 
   try {
     const result = await scraper.ttdl(urls);
-    // Try to normalize the result to downloadUrl + thumbnail
     const video = result && result.video ? result.video : result;
+
     let downloadUrl = null;
     let thumbnail = null;
 
@@ -104,9 +108,8 @@ router.get('/download', async (ctx) => {
 /**
  * POST /api/download
  * Expects JSON body: { tiktokUrl: "https://vm.tiktok.com/..." }
- * Returns JSON: { ok:true, downloadUrl: "...", thumbnail: "...", raw: {...} }
+ * Returns JSON { ok: true, downloadUrl, thumbnail, raw }
  */
-// Improved POST /api/download with aggressive normalization + debug info
 router.post('/api/download', async (ctx) => {
   const body = ctx.request.body || {};
   const tiktokUrl = body.tiktokUrl || body.url || ctx.request.query.url;
@@ -116,76 +119,7 @@ router.post('/api/download', async (ctx) => {
     return;
   }
 
-  // helper: try to extract a URL from many possible shapes
-  function findDownloadUrl(obj) {
-    if (!obj) return null;
-    // if it's already a string and looks like an http url, return it
-    if (typeof obj === 'string' && /^https?:\/\//i.test(obj)) return obj;
-
-    // common candidate keys
-    const keys = [
-      'downloadUrl','download','url','playAddr','play_url','videoUrl','video','video_url',
-      'noWatermark','no_watermark','no_watermark_url','no_watermark_url',
-      'watermarkless','no_wm','wmfree'
-    ];
-
-    for (const k of keys) {
-      if (obj[k]) {
-        if (typeof obj[k] === 'string' && /^https?:\/\//i.test(obj[k])) return obj[k];
-        // sometimes nested objects
-        if (typeof obj[k] === 'object') {
-          // check common nested fields
-          const nested = obj[k].url || obj[k].src || obj[k].playAddr || obj[k].download || obj[k][0];
-          if (nested && typeof nested === 'string' && /^https?:\/\//i.test(nested)) return nested;
-        }
-      }
-    }
-
-    // arrays like urls: [ { url: '...' }, '...' ]
-    if (Array.isArray(obj.urls) && obj.urls.length) {
-      for (const u of obj.urls) {
-        if (typeof u === 'string' && /^https?:\/\//i.test(u)) return u;
-        if (u && typeof u === 'object') {
-          const cand = u.url || u.src || u.playAddr || u.download;
-          if (cand && typeof cand === 'string' && /^https?:\/\//i.test(cand)) return cand;
-        }
-      }
-    }
-
-    // check for nested video object
-    if (obj.video) {
-      const found = findDownloadUrl(obj.video);
-      if (found) return found;
-    }
-
-    // thumbnail sometimes contains video url? check common nested fields
-    if (obj.data) {
-      const fromData = findDownloadUrl(obj.data);
-      if (fromData) return fromData;
-    }
-
-    // deep scan: walk object (limited depth to avoid perf)
-    function deepScan(o, depth = 0) {
-      if (!o || depth > 3) return null;
-      if (typeof o === 'string' && /^https?:\/\//i.test(o)) return o;
-      if (Array.isArray(o)) {
-        for (const it of o) {
-          const r = deepScan(it, depth + 1);
-          if (r) return r;
-        }
-      } else if (typeof o === 'object') {
-        for (const k of Object.keys(o)) {
-          const r = deepScan(o[k], depth + 1);
-          if (r) return r;
-        }
-      }
-      return null;
-    }
-
-    return deepScan(obj, 0);
-  }
-
-  // small retry wrapper in case of transient failures
+  // small retry wrapper
   async function tryProvider(url, attempts = 2) {
     let lastErr = null;
     for (let i = 0; i < attempts; i++) {
@@ -195,41 +129,89 @@ router.post('/api/download', async (ctx) => {
       } catch (err) {
         lastErr = err;
         console.warn(`scraper.ttdl attempt ${i+1} failed:`, (err && (err.message || err)));
-        // slight delay between retries
-        await new Promise(r => setTimeout(r, 400 * (i+1)));
+        await new Promise(r => setTimeout(r, 300 * (i+1)));
       }
     }
     throw lastErr;
   }
 
+  // deep find helper
+  function deepFindUrl(obj) {
+    if (!obj) return null;
+    if (typeof obj === 'string' && /^https?:\/\//i.test(obj)) return obj;
+
+    const keys = [
+      'downloadUrl','download','url','playAddr','play_url','videoUrl','video','video_url',
+      'noWatermark','no_watermark','no_watermark_url','watermarkless','no_wm','wmfree'
+    ];
+
+    for (const k of keys) {
+      if (obj[k]) {
+        if (typeof obj[k] === 'string' && /^https?:\/\//i.test(obj[k])) return obj[k];
+        if (typeof obj[k] === 'object') {
+          const nested = obj[k].url || obj[k].src || obj[k].playAddr || obj[k].download || obj[k][0];
+          if (typeof nested === 'string' && /^https?:\/\//i.test(nested)) return nested;
+        }
+      }
+    }
+
+    if (Array.isArray(obj.urls)) {
+      for (const u of obj.urls) {
+        if (typeof u === 'string' && /^https?:\/\//i.test(u)) return u;
+        if (u && typeof u === 'object') {
+          const cand = u.url || u.src || u.playAddr || u.download;
+          if (typeof cand === 'string' && /^https?:\/\//i.test(cand)) return cand;
+        }
+      }
+    }
+
+    if (obj.video) {
+      const found = deepFindUrl(obj.video);
+      if (found) return found;
+    }
+    if (obj.data) {
+      const found = deepFindUrl(obj.data);
+      if (found) return found;
+    }
+
+    // limited deep scan
+    function deepScan(o, depth = 0) {
+      if (!o || depth > 3) return null;
+      if (typeof o === 'string' && /^https?:\/\//i.test(o)) return o;
+      if (Array.isArray(o)) {
+        for (const it of o) {
+          const r = deepScan(it, depth + 1);
+          if (r) return r;
+        }
+      } else if (typeof o === 'object') {
+        for (const kk of Object.keys(o)) {
+          const r = deepScan(o[kk], depth + 1);
+          if (r) return r;
+        }
+      }
+      return null;
+    }
+
+    return deepScan(obj, 0);
+  }
+
   try {
     const result = await tryProvider(tiktokUrl, 2);
-    // log the raw result for debug (will show up in Render logs)
-    console.log('provider raw result:', JSON.stringify(result && (typeof result === 'object' ? result : { result }), null, 2));
+    console.log('provider raw result keys:', result && typeof result === 'object' ? Object.keys(result) : typeof result);
 
-    // attempt to find download url
     let downloadUrl = null;
     let thumbnail = null;
-
-    // if provider returns {audio, video} like the original route
     if (result && result.video) {
-      downloadUrl = findDownloadUrl(result.video);
-      thumbnail = result.thumbnail || result.cover || (result.video && (result.video.thumbnail || result.video.cover));
+      downloadUrl = deepFindUrl(result.video);
+      thumbnail = result.thumbnail || result.cover || (result.video && (result.video.thumbnail || result.video.cover)) || null;
     } else {
-      // try direct
-      downloadUrl = findDownloadUrl(result);
+      downloadUrl = deepFindUrl(result);
       thumbnail = result && (result.thumbnail || result.cover || null);
     }
 
     if (!downloadUrl) {
-      // give the caller as much info as possible for debugging
       ctx.status = 502;
-      ctx.body = {
-        ok: false,
-        error: 'No download url found from provider',
-        hint: 'Check the "raw" field for provider response shape',
-        raw: result
-      };
+      ctx.body = { ok: false, error: 'No download URL found from provider', raw: result };
       return;
     }
 
@@ -241,15 +223,10 @@ router.post('/api/download', async (ctx) => {
   }
 });
 
-
 /**
- * GET /stream?url=<encoded_download_url>
- * Proxies the remote video URL and streams it to the client with a Content-Disposition
- * so the browser will download the file directly without opening another page.
+ * GET /stream?url=<encoded_mp4_url>
+ * Proxies and forces download with Content-Disposition: attachment
  */
-import { URL } from 'url';
-const nodeFetch = require('node-fetch'); // if already required as scraper uses btch-downloader, this is fine
-
 router.get('/stream', async (ctx) => {
   const source = ctx.request.query.url || ctx.request.query.source;
   if (!source) {
@@ -259,7 +236,6 @@ router.get('/stream', async (ctx) => {
   }
 
   try {
-    // Basic validation: ensure this looks like an http(s) URL
     const parsed = new URL(source);
     if (!/^https?:$/.test(parsed.protocol)) {
       ctx.status = 400;
@@ -267,70 +243,13 @@ router.get('/stream', async (ctx) => {
       return;
     }
 
-    // Fetch the remote video. Use node-fetch to get the stream.
-    const upstream = await nodeFetch(source, { method: 'GET' });
-
-    if (!upstream.ok) {
-      const txt = await upstream.text().catch(() => '');
-      ctx.status = 502;
-      ctx.body = { ok: false, error: 'Upstream fetch failed', status: upstream.status, body: txt };
-      return;
-    }
-
-    // Try to determine filename from URL or Content-Disposition
-    let filename = 'tiktok_video.mp4';
-    try {
-      const pathParts = parsed.pathname.split('/');
-      const last = pathParts[pathParts.length - 1];
-      if (last && last.includes('.')) filename = last;
-    } catch (e) {}
-
-    // Set headers for download
-    ctx.set('Content-Type', upstream.headers.get('content-type') || 'application/octet-stream');
-    ctx.set('Content-Disposition', `attachment; filename="${filename}"`);
-    // Optional: set cache-control if you want browsers to cache
-    // ctx.set('Cache-Control', 'public, max-age=3600');
-
-    // Pipe upstream body (ReadableStream) into koa response
-    ctx.body = upstream.body; // node-fetch v2 returns a Node Readable stream — Koa will stream it
-  } catch (err) {
-    console.error('GET /stream error:', err && (err.stack || err));
-    ctx.status = 500;
-    ctx.body = { ok: false, error: 'Server error proxying video', details: String(err) };
-  }
-});
-
-// ===== Stronger /stream route (Koa) =====
-const { URL } = require('url');
-const nodeFetch = require('node-fetch'); // ensure this is installed in package.json
-
-router.get('/stream', async (ctx) => {
-  const source = ctx.request.query.url || ctx.request.query.source;
-  if (!source) {
-    ctx.status = 400;
-    ctx.body = { ok: false, error: 'Missing url query parameter' };
-    return;
-  }
-
-  try {
-    // Basic validation
-    const parsed = new URL(source);
-    if (!/^https?:$/.test(parsed.protocol)) {
-      ctx.status = 400;
-      ctx.body = { ok: false, error: 'Invalid URL protocol' };
-      return;
-    }
-
-    // Fetch upstream, follow redirects
     const upstream = await nodeFetch(source, {
       method: 'GET',
       redirect: 'follow',
       headers: {
-        // Some providers block non-browser agents — use a browser UA
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         'Accept': '*/*'
-      },
-      // optional: increase timeout if needed (node-fetch v2 doesn't have timeout here)
+      }
     });
 
     if (!upstream.ok) {
@@ -340,18 +259,14 @@ router.get('/stream', async (ctx) => {
       return;
     }
 
-    // Derive filename (try content-disposition header or fallback)
+    // Try to pick filename from Content-Disposition or fallback to path
     let filename = 'tiktok_video.mp4';
     try {
-      // try upstream Content-Disposition to extract filename
       const cd = upstream.headers.get('content-disposition');
       if (cd) {
         const m = cd.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)/i);
-        if (m && m[1]) {
-          filename = decodeURIComponent(m[1]);
-        }
+        if (m && m[1]) filename = decodeURIComponent(m[1]);
       } else {
-        // fallback: use last path part if it contains extension
         const parts = parsed.pathname.split('/');
         const last = parts[parts.length - 1] || '';
         if (last && last.includes('.')) filename = last;
@@ -360,26 +275,23 @@ router.get('/stream', async (ctx) => {
       // ignore and use fallback filename
     }
 
-    // Set response headers to force download
     const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
     ctx.set('Content-Type', contentType);
     ctx.set('Content-Disposition', `attachment; filename="${filename}"`);
 
-    // If upstream provides length, forward it
     const upstreamLength = upstream.headers.get('content-length');
     if (upstreamLength) ctx.set('Content-Length', upstreamLength);
 
-    // Stream upstream body directly to client (node-fetch v2 -> Readable stream)
     ctx.status = 200;
-    ctx.body = upstream.body;
+    ctx.body = upstream.body; // node-fetch v2 Readable stream
   } catch (err) {
     console.error('GET /stream error:', err && (err.stack || err));
     ctx.status = 500;
     ctx.body = { ok: false, error: 'Server error proxying video', details: String(err) };
   }
 });
-// ===== end /stream =====
 
+// Apply routes & start server
 app.use(router.routes());
 app.use(router.allowedMethods());
 
