@@ -1,167 +1,160 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="google-site-verification" content="P0e4HRfalsCcvLudOXKuQjKVe5SgROwR7CG6z1Lpu3s" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TikTokDL — Oba • Download TikTok Videos (No Watermark)</title>
-  <meta name="description" content="TikTokDL by Oba — Fast, free TikTok downloader. Paste a TikTok link and download the video without watermark." />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="icon" href="img/icon.png" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TikTokDL — Download TikTok Videos Without Watermark | Genzchamp</title>
+  <meta name="description" content="Free TikTok video downloader by Genzchamp — download TikTok videos in HD without watermark instantly. Fast, secure, and mobile-friendly.">
+  <link rel="icon" href="./img/icon.png">
+  <style>
+    :root {
+      --bg: #080f1f;
+      --card: #101828;
+      --text: #eaf3ff;
+      --muted: #9fb0c7;
+      --accent: #6be3ff;
+      --accent2: #ff3cac;
+      --gold: #ffd65b;
+    }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-align: center;
+    }
+    header {
+      padding: 30px 10px;
+    }
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    form {
+      margin: 20px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="text"] {
+      width: 90%;
+      max-width: 400px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #222;
+      background: var(--card);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    button {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border: none;
+      padding: 10px 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #04121a;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    #content {
+      margin-top: 20px;
+      min-height: 100px;
+    }
+    footer {
+      margin-top: 40px;
+      padding: 20px;
+      background: var(--card);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 8px;
+      font-size: 0.95rem;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+    .cookie-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(10, 18, 35, 0.95);
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .cookie-banner button {
+      background: var(--accent);
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #04121a;
+    }
+    @media (max-width:600px){
+      .cookie-banner{flex-direction:column;text-align:center;}
+    }
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <img src="img/icon.png" alt="logo" class="logo"/>
-      <div>
-        <div class="title">TikTokDL <span class="by">by Oba</span></div>
-        <div class="subtitle">Download TikTok videos — quick & clean</div>
-      </div>
-    </div>
-    <nav class="nav">
-      <a href="#" class="nav-link">Home</a>
-      <a href="#how" class="nav-link">How</a>
-      <a href="#support" class="nav-link">Support</a>
-    </nav>
+  <header>
+    <h1>🎵 TikTokDL — By Genzchamp</h1>
+    <p>Download TikTok videos in HD, no watermark — free forever.</p>
   </header>
 
-  <main class="hero">
-    <div class="hero-left">
-      <h1 class="hero-h">Save TikTok videos — <span class="accent">no watermark</span></h1>
-      <p class="hero-p">Paste a TikTok link below and get a clean MP4 instantly. Works with short links (vm.tiktok.com) — mobile friendly.</p>
-
-      <form id="downloadForm" class="download-form" autocomplete="off">
-        <input id="urlInput" type="text" placeholder="Paste TikTok link (vm.tiktok.com or www.tiktok.com/…)" />
-        <button type="submit" id="downloadBtn">GENERATE</button>
-      </form>
-
-      <div id="result" class="result">
-        <div class="empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <p>Paste a link and press <strong>GENERATE</strong>.</p>
-        </div>
-      </div>
-
-      <div class="meta-row">
-        <div class="ad-slot">AD SLOT — replace with Ad code</div>
-        <div id="support" class="donation">
-          <a class="pay-btn" href="https://paystack.shop/pay/support-oba" target="_blank" rel="noopener">
-            💚 Support Oba
-          </a>
-          <div class="small">Thanks — every bit helps keep the site alive.</div>
-        </div>
-      </div>
-    </div>
-
-    <aside class="hero-right">
-      <div class="card glass">
-        <h3>Why TikTokDL?</h3>
-        <ul>
-          <li>Fast downloads — demo & small scale</li>
-          <li>Expands short links automatically</li>
-          <li>No client apps or login required</li>
-        </ul>
-      </div>
-
-      <div class="card preview">
-        <div id="thumbArea" class="thumbArea">Preview will appear here</div>
-        <div id="linkArea" class="linkArea"></div>
-      </div>
-    </aside>
+  <main>
+    <form id="form">
+      <input type="text" name="url" placeholder="Paste TikTok video URL here..." required>
+      <button type="submit">Download</button>
+    </form>
+    <div id="content"></div>
   </main>
 
-  <section id="how" class="how">
-    <h2>How it works</h2>
-    <ol>
-      <li>Copy the TikTok video link (or share link)</li>
-      <li>Paste it into the box above</li>
-      <li>Click <strong>GENERATE</strong> — wait a moment</li>
-      <li>Click the download link to save the MP4</li>
-    </ol>
-  </section>
-
-  <footer class="footer">
-    <div class="left">
-      <strong>© 2025 TikTokDL — Oba</strong>
-      <div class="tiny">Respect creators. Use responsibly.</div>
-    </div>
-    <div class="right">
-      <a class="tiny" href="/privacy.html">Privacy</a>
-      <a class="tiny" href="/terms.html">Terms</a>
-    </div>
+  <footer>
+    <p>
+      <a href="/privacy.html">Privacy Policy</a> |
+      <a href="/terms.html">Terms of Service</a> |
+      <a href="/contact.html">Contact</a>
+    </p>
+    <p style="color: var(--muted); font-size:0.85rem;">© 2025 Genzchamp — TikTokDL</p>
   </footer>
 
-  <!-- Inline JS (simple, self-contained) -->
+  <div class="cookie-banner" id="cookieBanner">
+    <span>We use minimal cookies to improve your experience. By continuing, you agree to our <a href="/privacy.html" style="color:var(--accent)">Privacy Policy</a>.</span>
+    <button id="acceptCookies">OK</button>
+  </div>
+
+  <script type="module" src="./frontend.js"></script>
   <script>
-  // Minimal frontend script to call your backend /api/download and show result
-  (function(){
-    const form = document.getElementById('downloadForm');
-    const urlInput = document.getElementById('urlInput');
-    const result = document.getElementById('result');
-    const thumbArea = document.getElementById('thumbArea');
-    const linkArea = document.getElementById('linkArea');
-    const btn = document.getElementById('downloadBtn');
-
-    function showMessage(text, err=false){
-      result.innerHTML = '<div class="msg '+(err?'err':'ok')+'">'+text+'</div>';
+    // Cookie banner logic
+    const banner = document.getElementById('cookieBanner');
+    const btn = document.getElementById('acceptCookies');
+    if(localStorage.getItem('cookiesAccepted')){
+      banner.style.display = 'none';
     }
-
-    function showEmpty(){
-      result.innerHTML = '<div class="empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><p>Paste a link and press <strong>GENERATE</strong>.</p></div>';
-      thumbArea.textContent = 'Preview will appear here';
-      linkArea.innerHTML = '';
-    }
-
-    async function callApi(tiktokUrl){
-      try {
-        const resp = await fetch('/api/download', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ tiktokUrl })
-        });
-
-        const text = await resp.text();
-        let data;
-        try { data = JSON.parse(text); } catch(e){ data = { error: 'Invalid response from server', raw: text }; }
-
-        if(!resp.ok) {
-          showMessage(data.error || data.message || 'Server error', true);
-          console.error('Server error:', data);
-          return;
-        }
-
-        const dl = data.downloadUrl || data.url || data.video || data.link;
-        const thumb = data.thumbnail || null;
-
-        if(dl){
-          thumbArea.innerHTML = thumb ? '<img src="'+thumb+'" alt="thumb" />' : '<div class="no-thumb">Video ready</div>';
-          linkArea.innerHTML = '<a class="download-link" href="'+dl+'" target="_blank" rel="noopener">⬇ Download Video</a>';
-          showMessage('Ready — click the download link below.');
-        } else {
-          showMessage('No download URL returned. See console.', true);
-          console.log('Full response:', data);
-        }
-      } catch(err){
-        showMessage('Network or server error. Try again.', true);
-        console.error(err);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'GENERATE';
-      }
-    }
-
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      const val = urlInput.value.trim();
-      if(!val){ showEmpty(); return; }
-      btn.disabled = true; btn.textContent = 'Processing…';
-      showMessage('Contacting server…');
-      callApi(val);
+    btn.addEventListener('click', ()=>{
+      localStorage.setItem('cookiesAccepted', true);
+      banner.style.display = 'none';
     });
-
-    // init
-    showEmpty();
-  })();
   </script>
 </body>
 </html>
