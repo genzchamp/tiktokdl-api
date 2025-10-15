@@ -9,7 +9,7 @@ const logger = require('koa-logger');
 const responseTime = require('koa-response-time');
 const ratelimit = require('koa-ratelimit');
 const scraper = require('btch-downloader'); // existing provider used earlier
-const nodeFetch = require('node-fetch'); // requires node-fetch v2.x (CommonJS)
+const nodeFetch = require('node-fetch'); // node-fetch v2.x (CommonJS)
 const { URL } = require('url');
 
 const app = new Koa();
@@ -24,7 +24,7 @@ app.use(logger());
 app.use(responseTime());
 app.use(bodyParser());
 
-// rate limit (in-memory) - fine for small-scale usage
+// rate limit (in-memory)
 app.use(ratelimit({
   driver: 'memory',
   db: new Map(),
@@ -47,8 +47,6 @@ app.use(ratelimit({
 
 /**
  * Compatibility route (original)
- * GET /tiktok/api.php?url=<tiktok_link>
- * Returns provider's audio/video structure (keeps backwards compatibility)
  */
 router.get('/tiktok/api.php', async (ctx) => {
   const urls = ctx.request.query.url;
@@ -71,9 +69,7 @@ router.get('/tiktok/api.php', async (ctx) => {
 });
 
 /**
- * Helper GET route for testing:
- * GET /download?url=<tiktok_link>
- * Returns normalized JSON with downloadUrl + thumbnail
+ * Helper test route: GET /download?url=...
  */
 router.get('/download', async (ctx) => {
   const urls = ctx.request.query.url || ctx.request.query.tiktokUrl;
@@ -106,9 +102,8 @@ router.get('/download', async (ctx) => {
 });
 
 /**
- * POST /api/download
- * Expects JSON body: { tiktokUrl: "https://vm.tiktok.com/..." }
- * Returns JSON { ok: true, downloadUrl, thumbnail, raw }
+ * Robust POST /api/download
+ * Expects JSON body: { tiktokUrl: "https://..." }
  */
 router.post('/api/download', async (ctx) => {
   const body = ctx.request.body || {};
@@ -119,7 +114,7 @@ router.post('/api/download', async (ctx) => {
     return;
   }
 
-  // small retry wrapper
+  // retry wrapper
   async function tryProvider(url, attempts = 2) {
     let lastErr = null;
     for (let i = 0; i < attempts; i++) {
@@ -135,83 +130,100 @@ router.post('/api/download', async (ctx) => {
     throw lastErr;
   }
 
-  // deep find helper
-  function deepFindUrl(obj) {
-    if (!obj) return null;
+  // deep find helper for http(s) urls
+  function deepFindUrl(obj, depth = 0) {
+    if (!obj || depth > 4) return null;
     if (typeof obj === 'string' && /^https?:\/\//i.test(obj)) return obj;
 
-    const keys = [
+    const candidateKeys = [
       'downloadUrl','download','url','playAddr','play_url','videoUrl','video','video_url',
-      'noWatermark','no_watermark','no_watermark_url','watermarkless','no_wm','wmfree'
+      'noWatermark','no_watermark','no_watermark_url','watermarkless','no_wm','wmfree',
+      'src','source'
     ];
 
-    for (const k of keys) {
-      if (obj[k]) {
-        if (typeof obj[k] === 'string' && /^https?:\/\//i.test(obj[k])) return obj[k];
-        if (typeof obj[k] === 'object') {
-          const nested = obj[k].url || obj[k].src || obj[k].playAddr || obj[k].download || obj[k][0];
-          if (typeof nested === 'string' && /^https?:\/\//i.test(nested)) return nested;
+    if (typeof obj === 'object') {
+      for (const k of candidateKeys) {
+        if (Object.prototype.hasOwnProperty.call(obj, k)) {
+          const v = obj[k];
+          if (typeof v === 'string' && /^https?:\/\//i.test(v)) return v;
+          if (Array.isArray(v) && v.length) {
+            for (const it of v) {
+              if (typeof it === 'string' && /^https?:\/\//i.test(it)) return it;
+              if (typeof it === 'object') {
+                const inner = deepFindUrl(it, depth + 1);
+                if (inner) return inner;
+              }
+            }
+          }
+          if (typeof v === 'object') {
+            const nested = deepFindUrl(v, depth + 1);
+            if (nested) return nested;
+          }
         }
       }
     }
 
-    if (Array.isArray(obj.urls)) {
-      for (const u of obj.urls) {
-        if (typeof u === 'string' && /^https?:\/\//i.test(u)) return u;
-        if (u && typeof u === 'object') {
-          const cand = u.url || u.src || u.playAddr || u.download;
-          if (typeof cand === 'string' && /^https?:\/\//i.test(cand)) return cand;
-        }
+    if (Array.isArray(obj)) {
+      for (const it of obj) {
+        const r = deepFindUrl(it, depth + 1);
+        if (r) return r;
       }
-    }
-
-    if (obj.video) {
-      const found = deepFindUrl(obj.video);
-      if (found) return found;
-    }
-    if (obj.data) {
-      const found = deepFindUrl(obj.data);
-      if (found) return found;
-    }
-
-    // limited deep scan
-    function deepScan(o, depth = 0) {
-      if (!o || depth > 3) return null;
-      if (typeof o === 'string' && /^https?:\/\//i.test(o)) return o;
-      if (Array.isArray(o)) {
-        for (const it of o) {
-          const r = deepScan(it, depth + 1);
+    } else if (typeof obj === 'object') {
+      for (const key of Object.keys(obj)) {
+        try {
+          const val = obj[key];
+          if (typeof val === 'string' && /^https?:\/\//i.test(val)) return val;
+          const r = deepFindUrl(val, depth + 1);
           if (r) return r;
-        }
-      } else if (typeof o === 'object') {
-        for (const kk of Object.keys(o)) {
-          const r = deepScan(o[kk], depth + 1);
-          if (r) return r;
+        } catch (e) {
+          console.warn('deepFindUrl property access error for key', key, e && e.message);
         }
       }
-      return null;
     }
-
-    return deepScan(obj, 0);
+    return null;
   }
 
   try {
     const result = await tryProvider(tiktokUrl, 2);
+
+    // <<-- DEBUG LOG: show full provider raw result (for inspection in Render logs)
+    try {
+      console.log('PROVIDER RAW RESULT ===>', JSON.stringify(result, null, 2));
+    } catch (logErr) {
+      console.warn('Could not stringify provider result for logging:', logErr && logErr.message);
+    }
+    // also log top-level keys for quick view
     console.log('provider raw result keys:', result && typeof result === 'object' ? Object.keys(result) : typeof result);
+
+    // try common containers
+    const candidateContainers = [];
+    if (result && result.video) candidateContainers.push(result.video);
+    if (result && result.data) candidateContainers.push(result.data);
+    candidateContainers.push(result);
 
     let downloadUrl = null;
     let thumbnail = null;
-    if (result && result.video) {
-      downloadUrl = deepFindUrl(result.video);
-      thumbnail = result.thumbnail || result.cover || (result.video && (result.video.thumbnail || result.video.cover)) || null;
-    } else {
-      downloadUrl = deepFindUrl(result);
-      thumbnail = result && (result.thumbnail || result.cover || null);
+
+    for (const container of candidateContainers) {
+      if (!container) continue;
+      downloadUrl = deepFindUrl(container);
+      if (downloadUrl) {
+        thumbnail = (container && (container.thumbnail || container.cover || container.thumb)) || result.thumbnail || result.cover || null;
+        break;
+      }
     }
+
+    // final fallback deep scan
+    if (!downloadUrl) downloadUrl = deepFindUrl(result);
 
     if (!downloadUrl) {
       ctx.status = 502;
-      ctx.body = { ok: false, error: 'No download URL found from provider', raw: result };
+      ctx.body = {
+        ok: false,
+        error: 'No download URL found from provider',
+        hint: 'Provider returned unexpected shape. Please paste the "raw" field from this response here for debugging.',
+        raw: result
+      };
       return;
     }
 
@@ -259,7 +271,7 @@ router.get('/stream', async (ctx) => {
       return;
     }
 
-    // Try to pick filename from Content-Disposition or fallback to path
+    // Pick filename from headers or fallback to path
     let filename = 'tiktok_video.mp4';
     try {
       const cd = upstream.headers.get('content-disposition');
@@ -272,7 +284,7 @@ router.get('/stream', async (ctx) => {
         if (last && last.includes('.')) filename = last;
       }
     } catch (e) {
-      // ignore and use fallback filename
+      // ignore and use fallback
     }
 
     const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
@@ -283,7 +295,7 @@ router.get('/stream', async (ctx) => {
     if (upstreamLength) ctx.set('Content-Length', upstreamLength);
 
     ctx.status = 200;
-    ctx.body = upstream.body; // node-fetch v2 Readable stream
+    ctx.body = upstream.body;
   } catch (err) {
     console.error('GET /stream error:', err && (err.stack || err));
     ctx.status = 500;
