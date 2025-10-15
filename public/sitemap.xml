@@ -1,9 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset 
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- Home / landing page -->
   <url>
     <loc>https://tiktokdl-api-1.onrender.com/</loc>
-    <lastmod>2025-09-29</lastmod>
+    <lastmod>2025-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Public pages / common site pages -->
+  <url>
+    <loc>https://tiktokdl-api-1.onrender.com/privacy.html</loc>
+    <lastmod>2025-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <url>
+    <loc>https://tiktokdl-api-1.onrender.com/terms.html</loc>
+    <lastmod>2025-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Frontend download UI (if you have a dedicated page) -->
+  <url>
+    <loc>https://tiktokdl-api-1.onrender.com/download</loc>
+    <lastmod>2025-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Helpful API endpoints (include only if you want them discoverable) -->
+  <url>
+    <loc>https://tiktokdl-api-1.onrender.com/api/download</loc>
+    <lastmod>2025-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://tiktokdl-api-1.onrender.com/stream</loc>
+    <lastmod>2025-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
 </urlset>
