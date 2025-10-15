@@ -1,158 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TikTokDL — Download TikTok Videos Without Watermark | Genzchamp</title>
-  <meta name="description" content="Free TikTok video downloader by Genzchamp — download TikTok videos in HD without watermark instantly. Fast, secure, and mobile-friendly.">
-  <link rel="icon" href="./img/icon.png">
+  <meta charset="utf-8" />
+  <title>TikTokDL — By Genzchamp</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Download TikTok videos without watermark — fast & free.">
+  <link rel="icon" href="./img/icon.png" />
   <style>
-    :root {
-      --bg: #080f1f;
-      --card: #101828;
-      --text: #eaf3ff;
-      --muted: #9fb0c7;
-      --accent: #6be3ff;
-      --accent2: #ff3cac;
-      --gold: #ffd65b;
-    }
-    body {
-      margin: 0;
-      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: var(--bg);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      text-align: center;
-    }
-    header {
-      padding: 30px 10px;
-    }
-    header h1 {
-      font-size: 1.9rem;
-      font-weight: 700;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    form {
-      margin: 20px auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-    input[type="text"] {
-      width: 90%;
-      max-width: 400px;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #222;
-      background: var(--card);
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
-    }
-    button {
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border: none;
-      padding: 10px 16px;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: 10px;
-      cursor: pointer;
-      color: #04121a;
-      transition: transform 0.2s;
-    }
-    button:hover {
-      transform: scale(1.05);
-    }
-    #content {
-      margin-top: 20px;
-      min-height: 100px;
-    }
-    footer {
-      margin-top: 40px;
-      padding: 20px;
-      background: var(--card);
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-      margin: 0 8px;
-      font-size: 0.95rem;
-    }
-    footer a:hover {
-      text-decoration: underline;
-    }
-    .cookie-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: rgba(10, 18, 35, 0.95);
-      color: var(--text);
-      font-size: 0.9rem;
-      padding: 10px 15px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      z-index: 100;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .cookie-banner button {
-      background: var(--accent);
-      border: none;
-      padding: 5px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      color: #04121a;
-    }
-    @media (max-width:600px){
-      .cookie-banner{flex-direction:column;text-align:center;}
-    }
+    :root{--bg:#071025;--card:#0b1220;--muted:#9fb0c7;--accent:#6be3ff;--accent2:#ff3cac;--text:#eaf3ff}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    .wrap{max-width:980px;margin:28px auto;padding:18px}
+    header{ text-align:center;padding:20px 10px }
+    h1{margin:0;font-size:1.8rem;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    p.lead{color:var(--muted);margin:8px 0 0}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03);margin-top:18px}
+    form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    input[type="url"], input[type="text"]{width:70%;min-width:220px;padding:10px;border-radius:10px;border:1px solid #1a2430;background:#071427;color:var(--text);outline:none}
+    input[type="submit"], button{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;padding:10px 14px;border-radius:10px;color:#04121a;font-weight:700;cursor:pointer}
+    #content{margin-top:16px;min-height:110px}
+    footer{margin-top:32px;padding:18px;background:var(--card);text-align:center;border-top:1px solid rgba(255,255,255,0.03)}
+    footer a{color:var(--accent);text-decoration:none;margin:0 8px;font-size:0.95rem}
+    /* compactPreview style */
+    #compactPreview{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+    #compactPreview img{width:160px;height:90px;border-radius:8px;object-fit:cover}
+    .download-link{padding:10px 14px;border-radius:10px;font-weight:700;text-decoration:none;display:inline-block}
+    /* cookie banner */
+    .cookie-banner{position:fixed;bottom:12px;left:12px;right:12px;background:rgba(8,16,30,0.95);padding:10px;border-radius:10px;display:flex;gap:10px;align-items:center;justify-content:center;z-index:999}
+    .cookie-banner button{background:var(--accent);border:none;padding:6px 10px;border-radius:8px;cursor:pointer;color:#04121a;font-weight:700}
+    @media (max-width:520px){ input[type="url"]{width:100%} }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🎵 TikTokDL — By Genzchamp</h1>
-    <p>Download TikTok videos in HD, no watermark — free forever.</p>
-  </header>
+  <div class="wrap">
+    <header>
+      <h1>🎵 TikTokDL — By Genzchamp</h1>
+      <p class="lead">Paste a TikTok link below and get the video without watermark.</p>
+    </header>
 
-  <main>
-    <form id="form">
-      <input type="text" name="url" placeholder="Paste TikTok video URL here..." required>
-      <button type="submit">Download</button>
-    </form>
-    <div id="content"></div>
-  </main>
+    <div class="card">
+      <form id="form" class="download-form">
+        <input id="url" name="url" type="url" placeholder="Paste a TikTok link (https://...)" required>
+        <input id="submit" type="submit" value="GENERATE">
+      </form>
+
+      <div id="content">
+        <div id="instructions" style="color:var(--muted);text-align:left;max-width:700px;margin:8px auto;">
+          <ol>
+            <li>Copy a TikTok video link</li>
+            <li>Paste it above and click <b>GENERATE</b></li>
+            <li>Click the download button when it appears</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- compact preview will appear after the form via JS -->
+  </div>
 
   <footer>
     <p>
-      <a href="/privacy.html">Privacy Policy</a> |
-      <a href="/terms.html">Terms of Service</a> |
+      <a href="/privacy.html">Privacy</a> |
+      <a href="/terms.html">Terms</a> |
       <a href="/contact.html">Contact</a>
     </p>
-    <p style="color: var(--muted); font-size:0.85rem;">© 2025 Genzchamp — TikTokDL</p>
+    <p style="color:var(--muted);font-size:0.9rem">© 2025 Genzchamp — TikTokDL</p>
   </footer>
 
-  <div class="cookie-banner" id="cookieBanner">
-    <span>We use minimal cookies to improve your experience. By continuing, you agree to our <a href="/privacy.html" style="color:var(--accent)">Privacy Policy</a>.</span>
+  <div class="cookie-banner" id="cookieBanner" style="display:block">
+    <span style="color:var(--muted)">We use minimal cookies to improve the site. By using the site you agree to our <a href="/privacy.html" style="color:var(--accent)">Privacy Policy</a>.</span>
     <button id="acceptCookies">OK</button>
   </div>
 
-  <script type="module" src="./frontend.js"></script>
+  <!-- IMPORTANT: this is the frontend script you already have in public/js/app.mjs -->
+  <script type="module" src="js/app.mjs"></script>
+
   <script>
-    // Cookie banner logic
+    // cookie banner logic (keeps the banner simple)
     const banner = document.getElementById('cookieBanner');
     const btn = document.getElementById('acceptCookies');
-    if(localStorage.getItem('cookiesAccepted')){
-      banner.style.display = 'none';
-    }
-    btn.addEventListener('click', ()=>{
-      localStorage.setItem('cookiesAccepted', true);
+    if (localStorage.getItem('cookiesAccepted')) banner.style.display = 'none';
+    btn.addEventListener('click', () => {
+      localStorage.setItem('cookiesAccepted', '1');
       banner.style.display = 'none';
     });
   </script>
