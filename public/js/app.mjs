@@ -1,3 +1,19 @@
+// GA event helper — add near the top of your frontend file
+function trackDownloadEvent(tiktokUrl) {
+  try {
+    if (window.gtag) {
+      // Event name: 'download_click' — parameters: url, site
+      window.gtag('event', 'download_click', {
+        'event_category': 'engagement',
+        'event_label': tiktokUrl || location.href,
+        'value': 1
+      });
+    }
+  } catch (e) {
+    // silence errors if GA not present
+    console.warn('GA track error', e && e.message);
+  }
+}
 // public/js/app.mjs — full replacement
 // Self-contained frontend for TikTokDL (works with backend POST /api/download and GET /stream)
 
